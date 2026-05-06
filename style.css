@@ -2263,6 +2263,12 @@ html.theme-switching *,
 html.theme-switching *::before,
 html.theme-switching *::after {
   transition: none !important;
+}
+/* Pausa animações durante a troca de tema, EXCETO a faixa de serviços
+   (manter o movimento fluido para que a troca seja imperceptível ali). */
+html.theme-switching *:not(.marquee-track),
+html.theme-switching *:not(.marquee-track)::before,
+html.theme-switching *:not(.marquee-track)::after {
   animation: none !important;
 }
 
