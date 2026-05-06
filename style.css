@@ -1707,18 +1707,7 @@ body {
   z-index: 3;
 }
 
-/* Shimmer apenas nas fotos "after" */
-.sp-shine {
-  position: absolute; inset: 0;
-  background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,.07) 50%, transparent 80%);
-  animation: shimmer 3s infinite;
-  z-index: 2;
-  pointer-events: none;
-}
-@keyframes shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
+/* (removido: .sp-shine + @keyframes shimmer — não eram usados em lugar nenhum) */
 
 /* ── CARPET PROCESS (sem imagem) ── */
 .sp-carpet-process {
@@ -2060,15 +2049,8 @@ body {
   transform: rotate(8deg) scale(1.12);
 }
 
-/* Service modal header icon — entrance pulse */
-.svc-overlay.open .svc-emoji svg {
-  animation: iconPop .6s var(--ease-spring) both;
-}
-@keyframes iconPop {
-  0%   { transform: scale(.6) rotate(-12deg); opacity: 0; }
-  60%  { transform: scale(1.15) rotate(4deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0); opacity: 1; }
-}
+/* (removido: animação "iconPop" no header do modal — causava um flash
+   indesejado quando o card de serviço terminava de abrir) */
 
 /* Process step icons — staggered float */
 .sp-step-icon svg { animation: floatSoft 3.2s ease-in-out infinite; }
@@ -2263,7 +2245,16 @@ body {
 /* ════════════════════════════
    THEME TOGGLE BUTTON
 ════════════════════════════ */
-body { transition: background-color .4s var(--ease), color .4s var(--ease); }
+/* Troca de tema: desliga todas as transições por um frame para evitar
+   o efeito de "piscar" (alguns elementos transicionavam, outros não,
+   criando dessincronia visual). */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+  animation: none !important;
+}
 
 .theme-toggle {
   background: transparent;
