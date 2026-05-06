@@ -371,23 +371,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  /* ── 11. THEME TOGGLE ── */
+  /* ── 11. THEME TOGGLE ──
+     Para evitar o "piscar" durante a troca: desligamos TODAS as transições
+     por um frame, trocamos o tema instantaneamente, e religamos depois.
+     Assim cores de body, cards, textos e bordas mudam ao mesmo tempo. */
   (function initThemeToggle() {
     const btn = document.getElementById('themeToggle');
     if (!btn) return;
     const root = document.documentElement;
-    function apply(theme) {
+
+    function apply(theme, instant) {
+      if (instant) {
+        root.classList.add('theme-switching');
+        // força reflow para garantir que o navegador "veja" o no-transition
+        // antes de mudar as variáveis CSS
+        void root.offsetHeight;
+      }
       root.setAttribute('data-theme', theme);
       btn.setAttribute('aria-label',
         theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
       try { localStorage.setItem('bn-theme', theme); } catch (e) {}
+      if (instant) {
+        // Remove no próximo frame, depois que as novas cores foram pintadas
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => root.classList.remove('theme-switching'));
+        });
+      }
     }
+
     btn.addEventListener('click', () => {
       const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-      apply(current === 'dark' ? 'light' : 'dark');
+      apply(current === 'dark' ? 'light' : 'dark', true);
     });
-    // initial label
-    apply(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+
+    // Set inicial — sem flicker, sem transição
+    apply(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light', false);
   })();
 
   /* ── 10. INIT Lucide ── */
