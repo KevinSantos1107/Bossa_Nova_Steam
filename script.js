@@ -4,14 +4,12 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ── 1. NAVBAR: scroll effect + hamburger ── */
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+  /* ── 1. NAVBAR: hamburger ── */
   const navbar    = document.getElementById('navbar');
   const hamburger = document.getElementById('hamburger');
   const navLinks  = document.getElementById('navLinks');
-
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 40);
-  }, { passive: true });
 
   hamburger.addEventListener('click', () => {
     const isOpen = navLinks.classList.toggle('open');
@@ -21,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
   });
 
-  // Close mobile menu on nav link click
   navLinks.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', () => {
       hamburger.classList.remove('open');
@@ -33,29 +30,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  /* ── 2. REVEAL ON SCROLL (IntersectionObserver) ── */
+  /* ── 2. REVEAL ON SCROLL ── */
   const reveals = document.querySelectorAll('.reveal');
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        const siblings = Array.from(
-          entry.target.parentElement.querySelectorAll('.reveal:not(.visible)')
-        );
-        const idx = siblings.indexOf(entry.target);
-        entry.target.style.transitionDelay = `${Math.min(idx * 80, 400)}ms`;
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
+      if (!entry.isIntersecting) return;
+      const siblings = Array.from(
+        entry.target.parentElement.querySelectorAll('.reveal:not(.visible)')
+      );
+      const idx = siblings.indexOf(entry.target);
+      entry.target.style.transitionDelay = `${Math.min(idx * 80, 400)}ms`;
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
   reveals.forEach(el => {
     const rect = el.getBoundingClientRect();
-    const alreadyInView = rect.top < window.innerHeight && rect.bottom > 0;
-    if (alreadyInView) {
-      // Elemento já visível no carregamento (acima do fold) — revela imediatamente
-      // sem passar pelo IntersectionObserver, evitando bug de desaparecimento
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
       el.classList.add('visible');
     } else {
       observer.observe(el);
@@ -63,13 +56,54 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  /* ── 3. STICKY CTA ── */
+  /* ── 3. UNIFIED SCROLL HANDLER (rAF-throttled) ──
+     Centraliza navbar scrolled, sticky CTA, parallax e active nav
+     em UM único listener com requestAnimationFrame.
+     Antes eram 4 listeners separados disputando frames — causava
+     bug de pintura no mobile (título do hero sumindo). */
   const stickyCta  = document.getElementById('stickyCta');
   const heroEl     = document.getElementById('hero');
+  const heroGlow1  = document.querySelector('.glow-1');
+  const heroGlow2  = document.querySelector('.glow-2');
+  const sections   = document.querySelectorAll('section[id]');
+  const navAnchors = document.querySelectorAll('.nav-links a[href^="#"]');
+
+  let ticking = false;
+
+  function onScroll() {
+    const y = window.scrollY;
+
+    // Navbar
+    navbar.classList.toggle('scrolled', y > 40);
+
+    // Sticky CTA
+    const heroHeight = heroEl ? heroEl.offsetHeight : 400;
+    stickyCta.classList.toggle('visible', y > heroHeight * 0.6);
+
+    // Hero parallax — DESKTOP ONLY (mobile causa bug de paint nos glows com blur 120px)
+    if (!isMobile && y < window.innerHeight) {
+      if (heroGlow1) heroGlow1.style.transform = `translate3d(0, ${y * 0.2}px, 0)`;
+      if (heroGlow2) heroGlow2.style.transform = `translate3d(0, ${y * -0.15}px, 0)`;
+    }
+
+    // Active nav link
+    let current = '';
+    sections.forEach(section => {
+      if (y >= section.offsetTop - 120) current = section.getAttribute('id');
+    });
+    navAnchors.forEach(a => {
+      if (a.classList.contains('nav-cta')) return;
+      a.style.color = a.getAttribute('href') === `#${current}` ? 'var(--green-light)' : '';
+    });
+
+    ticking = false;
+  }
 
   window.addEventListener('scroll', () => {
-    const heroHeight = heroEl ? heroEl.offsetHeight : 400;
-    stickyCta.classList.toggle('visible', window.scrollY > heroHeight * 0.6);
+    if (!ticking) {
+      requestAnimationFrame(onScroll);
+      ticking = true;
+    }
   }, { passive: true });
 
 
@@ -120,15 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
     nameError.classList.toggle('visible', !ok);
     return ok;
   }
-
   function validatePhone() {
-    const digits = phoneInput.value.replace(/\D/g, '');
-    const ok     = digits.length >= 7;
+    const ok = phoneInput.value.replace(/\D/g, '').length >= 7;
     phoneInput.classList.toggle('error', !ok);
     phoneError.classList.toggle('visible', !ok);
     return ok;
   }
-
   function validateService() {
     const ok = serviceInput.value !== '';
     serviceInput.classList.toggle('error', !ok);
@@ -152,9 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener('submit', e => {
     e.preventDefault();
-    const ok = validateName() & validatePhone() & validateService();
-    // Bitwise & garante que TODAS as funções de validação rodam (sem short-circuit)
-    if (ok) {
+    // Roda TODAS as validações (sem short-circuit) e depois combina
+    const okName    = validateName();
+    const okPhone   = validatePhone();
+    const okService = validateService();
+    if (okName && okPhone && okService) {
       showModal(document.getElementById('modalOverlay'));
       form.reset();
     } else {
@@ -164,13 +197,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  /* ── 6. MODAL GENÉRICO (foco gerenciado) ── */
+  /* ── 6. MODAL HELPERS ── */
   function showModal(overlay) {
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-
-    // Foca o primeiro elemento focável dentro do modal
     const focusable = overlay.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     if (focusable) setTimeout(() => focusable.focus(), 50);
   }
@@ -181,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
   }
 
-  // Modal de sucesso do formulário
   const successOverlay = document.getElementById('modalOverlay');
   const modalClose     = document.getElementById('modalClose');
 
@@ -195,95 +225,48 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
       const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        const top = target.getBoundingClientRect().top + window.scrollY - 72;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
+      if (!target) return;
+      e.preventDefault();
+      const top = target.getBoundingClientRect().top + window.scrollY - 72;
+      window.scrollTo({ top, behavior: 'smooth' });
     });
   });
 
 
-  /* ── 8. HERO PARALLAX (sutil) ── */
-  const heroGlow1 = document.querySelector('.glow-1');
-  const heroGlow2 = document.querySelector('.glow-2');
-
-  window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY;
-    if (scrollY < window.innerHeight) {
-      if (heroGlow1) heroGlow1.style.transform = `translateY(${scrollY * 0.2}px)`;
-      if (heroGlow2) heroGlow2.style.transform = `translateY(${scrollY * -0.15}px)`;
-    }
-  }, { passive: true });
-
-
-  /* ── 9. COUNTER ANIMATION ──
-     Usa data-target e data-decimals no .stat-value.
-     O sufixo fica num elemento separado (.stat-suffix) e nunca é tocado pelo JS,
-     eliminando o bug de piscar ao final da animação.
-  ── */
+  /* ── 8. COUNTER ANIMATION ── */
   function animateCounter(el, target, decimals, duration) {
-    const start    = performance.now();
-    const isFloat  = decimals > 0;
+    const start   = performance.now();
+    const isFloat = decimals > 0;
 
     function tick(now) {
-      const elapsed  = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease-out quart
-      const eased    = 1 - Math.pow(1 - progress, 4);
+      const progress = Math.min((now - start) / duration, 1);
+      const eased    = 1 - Math.pow(1 - progress, 4); // ease-out quart
       const current  = eased * target;
-
       el.textContent = isFloat ? current.toFixed(decimals) : Math.floor(current).toString();
-
       if (progress < 1) requestAnimationFrame(tick);
       else el.textContent = isFloat ? target.toFixed(decimals) : target.toString();
     }
-
     requestAnimationFrame(tick);
   }
-
-  const statValues = document.querySelectorAll('.stat-value');
 
   const statObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
-
       const el       = entry.target;
       const target   = parseFloat(el.dataset.target);
       const decimals = parseInt(el.dataset.decimals, 10) || 0;
-
       if (!isNaN(target)) {
-        // Zera o display antes de animar
         el.textContent = decimals > 0 ? (0).toFixed(decimals) : '0';
         animateCounter(el, target, decimals, 1800);
       }
-
       statObserver.unobserve(el);
     });
   }, { threshold: 0.5 });
 
-  statValues.forEach(el => statObserver.observe(el));
+  document.querySelectorAll('.stat-value').forEach(el => statObserver.observe(el));
 
 
-  /* ── 10. ACTIVE NAV LINK on scroll ── */
-  const sections   = document.querySelectorAll('section[id]');
-  const navAnchors = document.querySelectorAll('.nav-links a[href^="#"]');
-
-  window.addEventListener('scroll', () => {
-    let current = '';
-    sections.forEach(section => {
-      if (window.scrollY >= section.offsetTop - 120) current = section.getAttribute('id');
-    });
-    navAnchors.forEach(a => {
-      if (a.classList.contains('nav-cta')) return; // CTA mantém sua própria cor sempre
-      a.style.color = a.getAttribute('href') === `#${current}` ? 'var(--green-light)' : '';
-    });
-  }, { passive: true });
-
-
-  /* ── 11. SERVICE DETAIL MODALS (foco gerenciado) ── */
-
-  // Guarda o elemento que abriu o modal para restaurar foco ao fechar
+  /* ── 9. SERVICE DETAIL MODALS ── */
   let lastFocusedTrigger = null;
 
   function openServiceModal(serviceKey, triggerEl) {
@@ -293,8 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-
-    // Foca o botão de fechar
     const closeBtn = overlay.querySelector('.svc-close');
     if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
   }
@@ -303,32 +284,26 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-
-    // Restaura foco ao botão que abriu o modal
     if (lastFocusedTrigger) {
       lastFocusedTrigger.focus();
       lastFocusedTrigger = null;
     }
   }
 
-  // Botões "See Details →"
   document.querySelectorAll('.service-detail-btn').forEach(btn => {
     btn.addEventListener('click', () => openServiceModal(btn.dataset.service, btn));
   });
 
-  // Botões de fechar dentro dos modais
   document.querySelectorAll('.svc-close').forEach(btn => {
     btn.addEventListener('click', () => closeServiceModal(btn.closest('.svc-overlay')));
   });
 
-  // Fechar ao clicar no backdrop
   document.querySelectorAll('.svc-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => {
       if (e.target === overlay) closeServiceModal(overlay);
     });
   });
 
-  // CTAs dentro dos modais: fecha e rola até #contact
   document.querySelectorAll('.svc-cta-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.preventDefault();
@@ -344,31 +319,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ESC fecha qualquer modal aberto
+  // ESC fecha modais
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-
-    // Fecha success modal se aberto
     if (successOverlay.classList.contains('open')) {
       closeModal(successOverlay);
       return;
     }
-
-    // Fecha service modals
     document.querySelectorAll('.svc-overlay.open').forEach(o => closeServiceModal(o));
   });
 
 
-  /* ── INIT: inicializa ícones Lucide ── */
+  /* ── 10. INIT Lucide ── */
   if (window.lucide) {
     lucide.createIcons();
   } else {
-    // Fallback: tenta novamente após o script carregar (raramente necessário com versão fixada)
     window.addEventListener('load', () => {
       if (window.lucide) lucide.createIcons();
     });
   }
-
-  console.log('Bossa Nova Steam Cleaning — JS loaded ✓');
-
 });
