@@ -107,12 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 
 
-  /* ── 4. BEFORE & AFTER SLIDER ── */
-  function initSlider(sliderId, handleId) {
-    const slider = document.getElementById(sliderId);
-    const handle = document.getElementById(handleId);
-    const before = slider ? slider.querySelector('.ba-before') : null;
-    if (!slider || !handle || !before) return;
+  /* ── 4. BEFORE & AFTER SLIDERS (todos os cards do carrossel) ── */
+  function initBaSlider(slider) {
+    const handle = slider.querySelector('.ba-handle');
+    const before = slider.querySelector('.ba-before');
+    if (!handle || !before) return;
 
     let isDragging = false;
 
@@ -135,8 +134,49 @@ document.addEventListener('DOMContentLoaded', () => {
     slider.addEventListener('click', e => { if (!isDragging) setPosition(e.clientX); });
   }
 
-  initSlider('slider1', 'handle1');
-  initSlider('slider2', 'handle2');
+  document.querySelectorAll('.ba-carousel .ba-slider').forEach(initBaSlider);
+
+  /* ── 4b. RESULTS CAROUSEL ── */
+  (function initBaCarousel() {
+    const carousel = document.getElementById('baCarousel');
+    if (!carousel) return;
+    const track = document.getElementById('baTrack');
+    const cards = Array.from(track.querySelectorAll('.ba-card'));
+    const prev  = document.getElementById('baPrev');
+    const next  = document.getElementById('baNext');
+    const dotsEl = document.getElementById('baDots');
+    let index = 0;
+
+    cards.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'ba-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-label', `Go to transformation ${i + 1}`);
+      dot.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    function goTo(i) {
+      index = (i + cards.length) % cards.length;
+      track.scrollTo({ left: cards[index].offsetLeft, behavior: 'smooth' });
+      dotsEl.querySelectorAll('.ba-dot').forEach((d, di) => d.classList.toggle('active', di === index));
+    }
+
+    prev.addEventListener('click', () => goTo(index - 1));
+    next.addEventListener('click', () => goTo(index + 1));
+
+    // Keyboard nav when carousel is in viewport / focused
+    carousel.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(index - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(index + 1); }
+    });
+
+    // Resync on resize so the active card stays aligned
+    window.addEventListener('resize', () => {
+      track.scrollTo({ left: cards[index].offsetLeft, behavior: 'auto' });
+    }, { passive: true });
+  })();
 
 
   /* ── 5. FORM VALIDATION ── */
