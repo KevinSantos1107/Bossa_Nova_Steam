@@ -50,7 +50,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
-  reveals.forEach(el => observer.observe(el));
+  reveals.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const alreadyInView = rect.top < window.innerHeight && rect.bottom > 0;
+    if (alreadyInView) {
+      // Elemento já visível no carregamento (acima do fold) — revela imediatamente
+      // sem passar pelo IntersectionObserver, evitando bug de desaparecimento
+      el.classList.add('visible');
+    } else {
+      observer.observe(el);
+    }
+  });
 
 
   /* ── 3. STICKY CTA ── */
@@ -265,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.scrollY >= section.offsetTop - 120) current = section.getAttribute('id');
     });
     navAnchors.forEach(a => {
+      if (a.classList.contains('nav-cta')) return; // CTA mantém sua própria cor sempre
       a.style.color = a.getAttribute('href') === `#${current}` ? 'var(--green-light)' : '';
     });
   }, { passive: true });
