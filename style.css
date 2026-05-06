@@ -154,6 +154,17 @@ body {
   transform: translateY(0);
 }
 
+/* ── HERO: bypass total do IntersectionObserver ──
+   Elementos do hero são always-visible via CSS.
+   No mobile, o observer pode disparar isIntersecting:false
+   ao scroll por causa do viewport dinâmico (barra de endereço),
+   causando o desaparecimento do título. CSS puro não tem esse problema. */
+#hero .reveal {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: none !important;
+}
+
 /* ════════════════════════════
    NAVBAR
 ════════════════════════════ */
