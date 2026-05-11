@@ -40,11 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
         entry.target.parentElement.querySelectorAll('.reveal:not(.visible)')
       );
       const idx = siblings.indexOf(entry.target);
-      entry.target.style.transitionDelay = `${Math.min(idx * 80, 400)}ms`;
+      entry.target.style.transitionDelay = `${Math.min(idx * 50, 180)}ms`;
       entry.target.classList.add('visible');
       observer.unobserve(entry.target);
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.08, rootMargin: '0px 0px -10% 0px' });
 
   reveals.forEach(el => {
     const rect = el.getBoundingClientRect();
@@ -332,6 +332,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.service-detail-btn').forEach(btn => {
     btn.addEventListener('click', () => openServiceModal(btn.dataset.service, btn));
+  });
+
+  /* Marquee items: clicar abre o modal do serviço diretamente.
+     Antes de abrir, leva o scroll até a seção #services para que,
+     ao fechar o modal (X), o usuário permaneça na seção de serviços. */
+  document.querySelectorAll('.marquee-item[data-svc]').forEach(item => {
+    item.addEventListener('click', e => {
+      const key = item.dataset.svc;
+      if (!key) return;
+      e.preventDefault();
+      const services = document.getElementById('services');
+      if (services) {
+        const top = services.getBoundingClientRect().top + window.scrollY - 72;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+      // Usa a própria seção de serviços como "trigger" — ao fechar, o foco
+      // volta para lá em vez de voltar para o item da marquee (que está acima).
+      openServiceModal(key, services || item);
+    });
   });
 
   document.querySelectorAll('.svc-close').forEach(btn => {
