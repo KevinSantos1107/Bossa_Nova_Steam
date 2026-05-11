@@ -427,6 +427,62 @@ document.addEventListener('DOMContentLoaded', () => {
     apply(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light', false);
   })();
 
+  /* ── 12. MARQUEE SWIPE (toque interativo, só para esquerda) ──
+   Usa o truque de animation-delay negativo para sincronizar a
+   posição da animação com a posição do dedo sem conflito de
+   transform vs animação. */
+(function initMarqueeSwipe() {
+  const track = document.querySelector('.marquee-track');
+  if (!track) return;
+
+  let dragging  = false;
+  let startX    = 0;
+  let startProg = 0; // progresso no momento do toque (0 a 1)
+
+  /* Retorna a duração animada atual em segundos */
+  function getDuration() {
+    return window.innerWidth <= 768 ? 28 : 38;
+  }
+
+  /* Lê a posição visual atual da animação como fração (0–1) */
+  function getCurrentProgress() {
+    const matrix = new DOMMatrix(window.getComputedStyle(track).transform);
+    const px     = matrix.m41; // translateX em px (valor negativo)
+    const total  = track.scrollWidth / 2; // distância de um loop completo
+    return Math.abs(px) / total;
+  }
+
+  /* Aplica um progresso (0–1) via animation-delay negativo */
+  function setProgress(p) {
+    p = ((p % 1) + 1) % 1; // mantém no intervalo [0, 1)
+    track.style.animationDelay = `${-(p * getDuration())}s`;
+  }
+
+  track.addEventListener('touchstart', (e) => {
+    dragging   = true;
+    startX     = e.touches[0].clientX;
+    startProg  = getCurrentProgress();
+    track.style.animationPlayState = 'paused';
+    setProgress(startProg); // congela exatamente no frame atual
+  }, { passive: true });
+
+  track.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    const dx = e.touches[0].clientX - startX;
+    if (dx > 0) return; // bloqueia movimento para direita
+
+    const total    = track.scrollWidth / 2;
+    const deltaPct = Math.abs(dx) / total;
+    setProgress(startProg + deltaPct);
+  }, { passive: true });
+
+  track.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    track.style.animationPlayState = 'running'; // retoma do ponto atual
+  });
+})();
+
   /* ── 10. INIT Lucide ── */
   if (window.lucide) {
     lucide.createIcons();
