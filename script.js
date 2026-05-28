@@ -328,23 +328,24 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.setAttribute('aria-hidden', 'true');
     unlockScroll();
 
-    // Reset every slider inside this modal instantly on close.
-    // Doing it here (not on reopen) means there is nothing to animate
-    // when the modal appears again — it just starts at 50%.
-    overlay.querySelectorAll('[data-slider]').forEach(sl => {
-      const mask   = sl.querySelector('.svc-slider-before-mask');
-      const handle = sl.querySelector('.svc-slider-handle');
-      if (mask)   { mask.style.width     = '50%'; mask.style.animation   = ''; }
-      if (handle) { handle.style.left    = '50%'; handle.style.animation = ''; }
-      sl.style.setProperty('--slider-pct', '0.5');
-      sl.dataset.sliderReady = '';
-      sl.classList.remove('do-hint');
-    });
-
     if (lastFocusedTrigger) {
       lastFocusedTrigger.focus();
       lastFocusedTrigger = null;
     }
+
+    // Reset sliders AFTER the overlay fade-out finishes (350ms transition)
+    // so the user never sees the handle snapping back to center.
+    setTimeout(() => {
+      overlay.querySelectorAll('[data-slider]').forEach(sl => {
+        const mask   = sl.querySelector('.svc-slider-before-mask');
+        const handle = sl.querySelector('.svc-slider-handle');
+        if (mask)   { mask.style.width  = '50%'; mask.style.animation = ''; }
+        if (handle) { handle.style.left = '50%'; handle.style.animation = ''; }
+        sl.style.setProperty('--slider-pct', '0.5');
+        sl.dataset.sliderReady = '';
+        sl.classList.remove('do-hint');
+      });
+    }, 400); // 350ms transition + 50ms margin
   }
 
   document.querySelectorAll('.service-detail-btn').forEach(btn => {
@@ -580,8 +581,13 @@ document.addEventListener('DOMContentLoaded', () => {
       slider.classList.remove('is-dragging');
     });
 
-    // Hint animation on first open (removed above on first interaction)
-    slider.classList.add('do-hint');
+    // Hint animation only on the very first time this slider is opened.
+    // data-slider-hinted persists across open/close cycles so the hint
+    // never plays again after the user has interacted once.
+    if (!slider.dataset.sliderHinted) {
+      slider.dataset.sliderHinted = '1';
+      slider.classList.add('do-hint');
+    }
   }
 
   // Watch for modals opening and (re-)init their sliders.
