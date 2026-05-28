@@ -35,7 +35,7 @@ textarea,
   --bg-dark:     #FAF7F2;   /* main page background */
   --bg-card:     #FFFFFF;
   --bg-card2:    #F7F2EA;
-  --bg-light:    #F2ECDF;   /* warm off-white that softly breaks up pure white */
+  --bg-light:    #F2ECDF;   /* off-white quente — quebra sutil do branco puro */
   --bg-white:    #FFFFFF;
 
   /* Borders */
@@ -126,12 +126,11 @@ textarea,
 html {
   scroll-behavior: smooth;
   overflow-x: clip;
-  scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
-/* Prevent double-tap zoom and pinch gestures on interactive areas */
+/* Bloqueia double-tap zoom e gesto de pinça nas áreas interativas */
 body, a, button, input, select, textarea, label, [role="button"], img, svg {
   touch-action: manipulation;
 }
@@ -146,23 +145,11 @@ body {
   overflow-x: clip;
 }
 
-html.scroll-locked,
-body.scroll-locked {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-html.slider-dragging,
-body.slider-dragging {
-  overscroll-behavior: none;
-  user-select: none;
-}
-
 /* ── UTILITIES ── */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 .section-light { background: var(--bg-light); color: var(--text-dark); }
 
-/* Phone links: neutralize Safari/iOS blue auto-detection and keep contextual color */
+/* Telefone — neutraliza auto-detect azul do Safari/iOS e mantém a cor do contexto */
 a.phone-link,
 a.phone-link:visited,
 a.phone-link:hover,
@@ -246,7 +233,7 @@ a.phone-link:active {
 .btn-xl { padding: 18px 48px; font-size: 1.1rem; }
 .btn-full { width: 100%; justify-content: center; }
 
-/* ── REVEAL ANIMATION (smooth and polished) ── */
+/* ── REVEAL ANIMATION (suave e profissional) ── */
 .reveal {
   opacity: 0;
   transform: translateY(14px);
@@ -260,7 +247,7 @@ a.phone-link:active {
   transform: none;
 }
 
-/* Respect the system preference for reduced motion */
+/* Respeita preferência de menos animação do sistema */
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .reveal.visible {
@@ -465,8 +452,8 @@ a.phone-link:active {
   align-items: flex-start;
   gap: 8px;
   max-width: 760px;
-  /* Force a dedicated compositing layer to prevent mobile paint issues
-     when the address bar collapses/expands on iOS Safari and Chrome */
+  /* Força camada de composição própria — evita o bug de elementos sumirem
+     no mobile quando a barra de endereço colapsa/expande (iOS Safari + Chrome) */
   transform: translateZ(0);
   backface-visibility: hidden;
   will-change: transform;
@@ -567,7 +554,7 @@ a.phone-link:active {
 }
 .trust-badges .badge svg { color: var(--green-light); flex-shrink: 0; }
 
-/* ── ECO SEAL — hierarchy highlight before the CTAs ── */
+/* ── ECO SEAL — destaque hierárquico antes dos CTAs ── */
 .eco-seal {
   display: inline-flex;
   align-items: center;
@@ -882,7 +869,7 @@ a.phone-link:active {
   border-color: var(--border-green);
 }
 
-/* Stat number: value and suffix coexist without textContent conflicts */
+/* Stat number: valor e sufixo convivem sem conflito de textContent */
 .stat-number {
   font-family: var(--font-body);
   font-size: 2.8rem;
@@ -938,18 +925,77 @@ a.phone-link:active {
   text-align: left;
 }
 
-.ba-card .svc-slider-wrap {
-  margin: 0;
+/* Slider inside card */
+.ba-slider {
+  position: relative;
+  height: 420px;
+  cursor: ew-resize;
+  user-select: none;
+  overflow: hidden;
+}
+.ba-after, .ba-before {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.ba-before { width: 50%; right: auto; z-index: 2; }
+.ba-visual {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+.ba-visual img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.ba-card .svc-slider {
-  border: 0;
-  border-radius: 0;
+.ba-label {
+  position: absolute;
+  top: 14px;
+  z-index: 5;
+  padding: 4px 12px;
+  border-radius: var(--radius-xl);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
 }
+.ba-label-before { left: 12px; background: #B0413E; color: #fff; }
+.ba-label-after  { right: 12px; background: var(--green-primary); color: #fff; }
 
-.ba-card .svc-slider-caption {
-  padding: 0 28px 18px;
-  text-align: left;
+.ba-handle {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  transform: translateX(-50%);
+}
+.ba-handle::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(255,255,255,.8);
+  transform: translateX(-50%);
+}
+.handle-circle {
+  width: 40px; height: 40px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,.3);
+  z-index: 1;
+  color: #333;
 }
 
 .ba-caption {
@@ -974,7 +1020,7 @@ a.phone-link:active {
 /* Carousel arrows */
 .ba-nav {
   position: absolute;
-  top: clamp(92px, 28.125vw, 248px);
+  top: 210px;
   transform: translateY(-50%);
   width: 48px; height: 48px;
   border-radius: 50%;
@@ -1627,8 +1673,6 @@ a.phone-link:active {
   transition: opacity .35s var(--ease);
   will-change: opacity;
   transform: translateZ(0);
-  overflow: hidden;
-  overscroll-behavior: contain;
 }
 .svc-overlay.open {
   opacity: 1;
@@ -1641,10 +1685,8 @@ a.phone-link:active {
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 860px;
-  max-height: min(90vh, calc(100dvh - 40px));
+  max-height: 90vh;
   overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
   padding: 40px 40px 36px;
   position: relative;
   transform: translate3d(0, 32px, 0) scale(.97);
@@ -1723,7 +1765,7 @@ a.phone-link:active {
 .svc-photo-card { border-radius: var(--radius-md); overflow: hidden; }
 .svc-photo-card--wide { grid-column: 1 / -1; }
 
-/* Base photo: integrated images without cascade overrides */
+/* Foto base — imagens integradas corretamente, sem override em cascata */
 .svc-photo {
   width: 100%;
   height: 180px;
@@ -1736,7 +1778,7 @@ a.phone-link:active {
 }
 .svc-photo-card--wide .svc-photo { height: 160px; }
 
-/* All images inside .svc-photo are covered correctly */
+/* Todas as imagens dentro de .svc-photo ficam cobertas corretamente */
 .svc-photo img {
   position: absolute;
   inset: 0;
@@ -1772,9 +1814,9 @@ a.phone-link:active {
   z-index: 3;
 }
 
-/* Removed: .sp-shine + @keyframes shimmer were not used anywhere */
+/* (removido: .sp-shine + @keyframes shimmer — não eram usados em lugar nenhum) */
 
-/* ── CARPET PROCESS (no image) ── */
+/* ── CARPET PROCESS (sem imagem) ── */
 .sp-carpet-process {
   background: linear-gradient(135deg, var(--bg-darkest) 0%, #0E1F14 100%);
   align-items: center;
@@ -1800,7 +1842,7 @@ a.phone-link:active {
 .sp-step span { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
 .sp-arrow-icon { color: var(--green-light); font-size: 1rem; flex-shrink: 0; }
 
-/* ── FABRIC TYPES (no image) ── */
+/* ── FABRIC TYPES (sem imagem) ── */
 .sp-fabric-types {
   background: linear-gradient(135deg, var(--bg-darkest), #0A1820);
   align-items: center;
@@ -1828,7 +1870,7 @@ a.phone-link:active {
 .sp-f3 { background: linear-gradient(135deg, #1565C044, #1976D244); }
 .sp-f4 { background: linear-gradient(135deg, #2E7D3244, #388E3C44); }
 
-/* ── STAIN BUBBLES (no image) ── */
+/* ── STAIN BUBBLES (sem imagem) ── */
 .sp-stain-types {
   background: linear-gradient(135deg, #0d1b0f, #122418);
   align-items: center;
@@ -1859,7 +1901,7 @@ a.phone-link:active {
 .sp-b-food   { background: rgba(100,60,0,.2);  border-color: rgba(150,90,0,.4);  color: #FFF176; }
 .sp-b-ink    { background: rgba(20,40,120,.25);border-color: rgba(30,60,180,.4); color: #90CAF9; }
 
-/* ── STEAM MACHINE (with background image and decorative overlay) ── */
+/* ── STEAM MACHINE (com imagem de fundo + overlay decorativo) ── */
 .sp-steam-machine {
   align-items: center;
   justify-content: center;
@@ -1899,7 +1941,7 @@ a.phone-link:active {
 }
 .sp-machine-label small { color: var(--green-light); font-size: .65rem; }
 
-/* ── STEAM KILLS LIST (no image) ── */
+/* ── STEAM KILLS LIST (sem imagem) ── */
 .sp-steam-kills {
   background: linear-gradient(145deg, #0E1A10 0%, #112018 100%);
   align-items: center;
@@ -1924,7 +1966,7 @@ a.phone-link:active {
   display: flex; align-items: center; gap: 8px;
 }
 
-/* ── STEAM SURFACES (no image) ── */
+/* ── STEAM SURFACES (sem imagem) ── */
 .sp-steam-surfaces {
   background: linear-gradient(135deg, var(--bg-darkest), #0c1a0e);
   align-items: center;
@@ -1953,7 +1995,7 @@ a.phone-link:active {
   gap: 6px;
 }
 
-/* ── RESIDENTIAL ROOMS (no image) ── */
+/* ── RESIDENTIAL ROOMS (sem imagem) ── */
 .sp-home-rooms {
   background: linear-gradient(135deg, #060F18, #0A1A24);
   align-items: center;
@@ -2114,8 +2156,8 @@ a.phone-link:active {
   transform: rotate(8deg) scale(1.12);
 }
 
-/* Removed: "iconPop" animation in the modal header caused an unwanted flash
-   when the service card finished opening */
+/* (removido: animação "iconPop" no header do modal — causava um flash
+   indesejado quando o card de serviço terminava de abrir) */
 
 /* Process step icons — staggered float */
 .sp-step-icon svg { animation: floatSoft 3.2s ease-in-out infinite; }
@@ -2265,13 +2307,14 @@ a.phone-link:active {
 
   /* Carousel mobile */
   .ba-carousel { max-width: 100%; }
-  .ba-nav { width: 40px; height: 40px; }
+  .ba-slider { height: 280px; }
+  .ba-nav { width: 40px; height: 40px; top: 140px; }
   .ba-nav-prev { left: 8px; }
   .ba-nav-next { right: 8px; }
   .ba-caption { padding: 18px 20px 22px; }
   .ba-caption h4 { font-size: 1.1rem; }
 
-  /* Google rating: center and prevent horizontal overflow on mobile */
+  /* Google rating: centralizar e impedir overflow horizontal no mobile */
   .testimonials .section-title { padding: 0 16px; }
   .google-rating {
     left: auto;
@@ -2313,17 +2356,17 @@ a.phone-link:active {
 /* ════════════════════════════
    THEME TOGGLE BUTTON
 ════════════════════════════ */
-/* Theme switch: disable all transitions for one frame to avoid
-   flicker (some elements were transitioning while others were not,
-   creating visual desynchronization). */
+/* Troca de tema: desliga todas as transições por um frame para evitar
+   o efeito de "piscar" (alguns elementos transicionavam, outros não,
+   criando dessincronia visual). */
 html.theme-switching,
 html.theme-switching *,
 html.theme-switching *::before,
 html.theme-switching *::after {
   transition: none !important;
 }
-/* Pause animations during theme switching, except the services strip
-   so its movement stays fluid and the switch is imperceptible there. */
+/* Pausa animações durante a troca de tema, EXCETO a faixa de serviços
+   (manter o movimento fluido para que a troca seja imperceptível ali). */
 html.theme-switching *:not(.marquee-track),
 html.theme-switching *:not(.marquee-track)::before,
 html.theme-switching *:not(.marquee-track)::after {
@@ -2394,13 +2437,14 @@ html.theme-switching *:not(.marquee-track)::after {
 
 /* ════════════════════════════
    NAVBAR — MOBILE MENU LEGIBILIDADE
-   When the hamburger menu is open, force the navbar to use
-   the theme background and colors, ignoring the :not(.scrolled) state.
-   Fixes cream links on a white panel and white bars on a light background.
+   Quando o menu hambúrguer está aberto, força a navbar a usar
+   o fundo + cores do tema, ignorando o estado :not(.scrolled).
+   Resolve o caso "links cor creme sobre painel branco" e
+   "barras brancas sobre fundo claro".
 ═══════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* Mobile panel: SOLID theme background, not translucent */
+  /* Painel mobile: fundo SÓLIDO do tema (não translúcido) */
   .nav-links {
     background: var(--bg-card);
     box-shadow: 0 12px 32px rgba(0,0,0,.18);
@@ -2410,7 +2454,7 @@ html.theme-switching *:not(.marquee-track)::after {
     background: var(--bg-darkest);
   }
 
-  /* Links inside the panel: always use the theme text color */
+  /* Links dentro do painel: cor de texto do tema, SEMPRE */
   .nav-links a,
   .navbar:not(.scrolled) .nav-links a {
     color: var(--text-white);
@@ -2425,7 +2469,7 @@ html.theme-switching *:not(.marquee-track)::after {
     color: var(--green-light);
   }
 
-  /* CTA inside the menu: keep the gold highlight */
+  /* CTA dentro do menu: mantém destaque dourado */
   .nav-links .nav-cta,
   .navbar:not(.scrolled) .nav-links .nav-cta {
     color: var(--cta-fg) !important;
@@ -2435,8 +2479,8 @@ html.theme-switching *:not(.marquee-track)::after {
     background: var(--cta-hover);
   }
 
-  /* When the menu is open, the navbar also gets the theme background
-     so the 72px top strip matches the panel */
+  /* Quando o menu está aberto, navbar ganha fundo do tema também
+     (assim a faixa de 72px no topo combina com o painel) */
   .navbar:has(.nav-links.open) {
     background: var(--bg-card);
     backdrop-filter: none;
@@ -2446,7 +2490,7 @@ html.theme-switching *:not(.marquee-track)::after {
     background: var(--bg-darkest);
   }
 
-  /* Burger: color follows the theme. When open, always use text color. */
+  /* Burger: cor segue o tema. Quando aberto, sempre cor de texto. */
   .hamburger span,
   .navbar:not(.scrolled) .hamburger span {
     background: var(--text-white);
@@ -2456,13 +2500,13 @@ html.theme-switching *:not(.marquee-track)::after {
     background: var(--text-white);
   }
 
-  /* Logo inside the navbar when the menu is open: theme color */
+  /* Logo dentro da navbar quando o menu está aberto: cor do tema */
   .navbar:has(.nav-links.open) .logo,
   .navbar:not(.scrolled):has(.nav-links.open) .logo {
     color: var(--text-white);
   }
 
-  /* Theme toggle inside the navbar with menu open: theme color */
+  /* Theme toggle dentro da navbar com menu aberto: cor do tema */
   .navbar:has(.nav-links.open) .theme-toggle,
   .navbar:not(.scrolled):has(.nav-links.open) .theme-toggle {
     color: var(--text-white);
@@ -2541,9 +2585,9 @@ html.theme-switching *:not(.marquee-track)::after {
   to   { transform: translate3d(-50%, 0, 0); }
 }
 
-/* Light theme: the fade-to-transparent mask revealed the page's white
-   background at the edges. Side gradients now blend into the dark strip
-   without exposing the ivory background behind it. */
+/* Light theme: o mask fade-to-transparent revelava o fundo branco da página
+   nas pontas, ficando feio. Aqui trocamos por gradientes laterais que
+   fundem com a própria cor escura da faixa, sem expor o ivory atrás. */
 [data-theme="light"] .services-marquee {
   -webkit-mask-image: none;
           mask-image: none;
@@ -2617,14 +2661,13 @@ html.theme-switching *:not(.marquee-track)::after {
 .svc-slider {
   position: relative;
   width: 100%;
-  container-type: inline-size;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 12px;
   cursor: col-resize;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: none;
+  touch-action: pan-y;
   border: 1px solid var(--border);
   background: var(--bg-darkest);
 }
@@ -2651,7 +2694,7 @@ html.theme-switching *:not(.marquee-track)::after {
 .svc-slider-before-mask img {
   position: absolute;
   top: 0; left: 0;
-  width: 100cqw; /* matches the full slider width while the mask clips */
+  width: 100vw; /* keeps image at full slider width regardless of clip */
   max-width: none;
   height: 100%;
   object-fit: cover;
@@ -2672,11 +2715,6 @@ html.theme-switching *:not(.marquee-track)::after {
   width: 44px;
   will-change: left;
   pointer-events: none;
-}
-.svc-slider.is-dragging .svc-slider-handle,
-.svc-slider.is-dragging .svc-slider-before-mask {
-  animation: none !important;
-  transition: none !important;
 }
 .svc-slider-line {
   flex: 1;
