@@ -99,11 +99,11 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- LCP: preload the hero background for the matching viewport -->
+  <!-- LCP: preload hero background (correct version per viewport) -->
   <link rel="preload" as="image" href="images/hero-bg.webp" fetchpriority="high" media="(min-width: 769px)" />
   <link rel="preload" as="image" href="images/hero-bg-mobile.webp" fetchpriority="high" media="(max-width: 768px)" />
 
-  <!-- ── Lucide (pinned version to avoid silent breakage) ── -->
+  <!-- ── Lucide (pinned version — never silently breaks) ── -->
   <script src="https://unpkg.com/lucide@0.447.0/dist/umd/lucide.min.js"></script>
 
   <!-- ── Favicon ── -->
@@ -387,7 +387,7 @@
         </ul>
       </div>
 
-      <!-- Stat cards: number and suffix split into data attributes for the counter -->
+      <!-- Stat cards: value and suffix split into data-attributes for the counter -->
       <div class="why-stats reveal">
         <div class="stat-card">
           <div class="stat-number">
@@ -434,21 +434,18 @@
 
         <div class="ba-track" id="baTrack">
           <article class="ba-card" data-index="0">
-            <div class="svc-slider-wrap">
-              <div class="svc-slider" data-slider role="img" aria-label="Carpet before and after comparison">
-                <img class="svc-slider-after" loading="lazy" decoding="async" src="images/carpetcleaningafter.webp" alt="Carpet after professional steam cleaning" />
-                <div class="svc-slider-before-mask">
-                  <img loading="lazy" decoding="async" src="images/carpetcleaningbefore.webp" alt="Carpet before cleaning with visible stains" />
-                </div>
-                <div class="svc-slider-handle" aria-hidden="true">
-                  <div class="svc-slider-line"></div>
-                  <div class="svc-slider-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
-                  <div class="svc-slider-line"></div>
-                </div>
-                <span class="svc-slider-tag svc-slider-tag-before">Before</span>
-                <span class="svc-slider-tag svc-slider-tag-after">After</span>
+            <div class="ba-slider" role="img" aria-label="Carpet before and after comparison">
+              <div class="ba-after">
+                <div class="ba-label ba-label-after">After</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/carpetcleaningafter.webp" alt="Carpet after professional steam cleaning" /></div>
               </div>
-              <p class="svc-slider-caption">Drag to compare · Heavy traffic carpet to steam-extracted finish</p>
+              <div class="ba-before" style="width:50%">
+                <div class="ba-label ba-label-before">Before</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/carpetcleaningbefore.webp" alt="Carpet before cleaning with visible stains" /></div>
+              </div>
+              <div class="ba-handle" aria-hidden="true">
+                <div class="handle-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
+              </div>
             </div>
             <div class="ba-caption">
               <h4>Carpet Deep Clean — Pet Stain Removal</h4>
@@ -457,21 +454,18 @@
           </article>
 
           <article class="ba-card" data-index="1">
-            <div class="svc-slider-wrap">
-              <div class="svc-slider" data-slider role="img" aria-label="Upholstery before and after comparison">
-                <img class="svc-slider-after" loading="lazy" decoding="async" src="images/upholsterycleaningafter.webp" alt="Sofa after professional upholstery cleaning" />
-                <div class="svc-slider-before-mask">
-                  <img loading="lazy" decoding="async" src="images/upholsterycleaningbefore.webp" alt="Sofa before cleaning with visible stains" />
-                </div>
-                <div class="svc-slider-handle" aria-hidden="true">
-                  <div class="svc-slider-line"></div>
-                  <div class="svc-slider-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
-                  <div class="svc-slider-line"></div>
-                </div>
-                <span class="svc-slider-tag svc-slider-tag-before">Before</span>
-                <span class="svc-slider-tag svc-slider-tag-after">After</span>
+            <div class="ba-slider" role="img" aria-label="Upholstery before and after comparison">
+              <div class="ba-after">
+                <div class="ba-label ba-label-after">After</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/upholsterycleaningafter.webp" alt="Sofa after professional upholstery cleaning" /></div>
               </div>
-              <p class="svc-slider-caption">Drag to compare · Fabric sofa color and texture restored</p>
+              <div class="ba-before" style="width:50%">
+                <div class="ba-label ba-label-before">Before</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/upholsterycleaningbefore.webp" alt="Sofa before cleaning with visible stains" /></div>
+              </div>
+              <div class="ba-handle" aria-hidden="true">
+                <div class="handle-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
+              </div>
             </div>
             <div class="ba-caption">
               <h4>Upholstery Steam Clean — Wine Stain</h4>
@@ -480,21 +474,18 @@
           </article>
 
           <article class="ba-card" data-index="2">
-            <div class="svc-slider-wrap">
-              <div class="svc-slider" data-slider role="img" aria-label="Stain removal before and after comparison">
-                <img class="svc-slider-after" loading="lazy" decoding="async" src="images/stainremovalafter.webp" alt="Stain after targeted treatment" />
-                <div class="svc-slider-before-mask">
-                  <img loading="lazy" decoding="async" src="images/stainremovalbefore.webp" alt="Stain before treatment" />
-                </div>
-                <div class="svc-slider-handle" aria-hidden="true">
-                  <div class="svc-slider-line"></div>
-                  <div class="svc-slider-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
-                  <div class="svc-slider-line"></div>
-                </div>
-                <span class="svc-slider-tag svc-slider-tag-before">Before</span>
-                <span class="svc-slider-tag svc-slider-tag-after">After</span>
+            <div class="ba-slider" role="img" aria-label="Stain removal before and after comparison">
+              <div class="ba-after">
+                <div class="ba-label ba-label-after">After</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/stainremovalafter.webp" alt="Stain after targeted treatment" /></div>
               </div>
-              <p class="svc-slider-caption">Drag to compare · Red wine stain removed in one treatment</p>
+              <div class="ba-before" style="width:50%">
+                <div class="ba-label ba-label-before">Before</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/stainremovalbefore.webp" alt="Stain before treatment" /></div>
+              </div>
+              <div class="ba-handle" aria-hidden="true">
+                <div class="handle-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
+              </div>
             </div>
             <div class="ba-caption">
               <h4>Stain &amp; Odor Removal — Red Wine</h4>
@@ -503,21 +494,18 @@
           </article>
 
           <article class="ba-card" data-index="3">
-            <div class="svc-slider-wrap">
-              <div class="svc-slider" data-slider role="img" aria-label="Residential deep clean before and after comparison">
-                <img class="svc-slider-after" loading="lazy" decoding="async" src="images/deepcleanafter.webp" alt="Living room after deep clean" />
-                <div class="svc-slider-before-mask">
-                  <img loading="lazy" decoding="async" src="images/deepcleanbefore.webp" alt="Living room before deep clean" />
-                </div>
-                <div class="svc-slider-handle" aria-hidden="true">
-                  <div class="svc-slider-line"></div>
-                  <div class="svc-slider-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
-                  <div class="svc-slider-line"></div>
-                </div>
-                <span class="svc-slider-tag svc-slider-tag-before">Before</span>
-                <span class="svc-slider-tag svc-slider-tag-after">After</span>
+            <div class="ba-slider" role="img" aria-label="Residential deep clean before and after comparison">
+              <div class="ba-after">
+                <div class="ba-label ba-label-after">After</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/deepcleanafter.webp" alt="Living room after deep clean" /></div>
               </div>
-              <p class="svc-slider-caption">Drag to compare · Full living room refreshed same day</p>
+              <div class="ba-before" style="width:50%">
+                <div class="ba-label ba-label-before">Before</div>
+                <div class="ba-visual"><img loading="lazy" decoding="async" src="images/deepcleanbefore.webp" alt="Living room before deep clean" /></div>
+              </div>
+              <div class="ba-handle" aria-hidden="true">
+                <div class="handle-circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L3 12l5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
+              </div>
             </div>
             <div class="ba-caption">
               <h4>Residential Deep Clean — Full Living Room</h4>
