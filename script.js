@@ -327,6 +327,20 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
     unlockScroll();
+
+    // Reset every slider inside this modal instantly on close.
+    // Doing it here (not on reopen) means there is nothing to animate
+    // when the modal appears again — it just starts at 50%.
+    overlay.querySelectorAll('[data-slider]').forEach(sl => {
+      const mask   = sl.querySelector('.svc-slider-before-mask');
+      const handle = sl.querySelector('.svc-slider-handle');
+      if (mask)   { mask.style.width     = '50%'; mask.style.animation   = ''; }
+      if (handle) { handle.style.left    = '50%'; handle.style.animation = ''; }
+      sl.style.setProperty('--slider-pct', '0.5');
+      sl.dataset.sliderReady = '';
+      sl.classList.remove('do-hint');
+    });
+
     if (lastFocusedTrigger) {
       lastFocusedTrigger.focus();
       lastFocusedTrigger = null;
@@ -570,24 +584,14 @@ document.addEventListener('DOMContentLoaded', () => {
     slider.classList.add('do-hint');
   }
 
-  // Watch for modals opening and init their sliders
+  // Watch for modals opening and (re-)init their sliders.
+  // Reset already happened in closeServiceModal, so here we just call setupSlider.
   const observer = new MutationObserver(mutations => {
     mutations.forEach(m => {
       if (m.attributeName === 'aria-hidden') {
         const overlay = m.target;
         if (overlay.getAttribute('aria-hidden') === 'false') {
-          // Modal just opened — init all sliders inside it
-          overlay.querySelectorAll('[data-slider]').forEach(sl => {
-            // Reset position
-            const mask   = sl.querySelector('.svc-slider-before-mask');
-            const handle = sl.querySelector('.svc-slider-handle');
-            if (mask)   { mask.style.width  = '50%'; mask.style.animation   = ''; }
-            if (handle) { handle.style.left = '50%'; handle.style.animation = ''; }
-            sl.style.setProperty('--slider-pct', '0.5');
-            sl.dataset.sliderReady = '';
-            sl.classList.remove('do-hint');
-            setupSlider(sl);
-          });
+          overlay.querySelectorAll('[data-slider]').forEach(sl => setupSlider(sl));
         }
       }
     });
