@@ -4,6 +4,38 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  /* ── SCROLL LOCK UTILITY ──
+     Uses position:fixed trick so iOS Safari also blocks background scroll.
+     Multiple callers can nest: uses a reference counter so the first open
+     locks and the last close unlocks. */
+  let _scrollLockCount = 0;
+  let _savedScrollY    = 0;
+
+  function lockScroll() {
+    if (_scrollLockCount === 0) {
+      _savedScrollY = window.scrollY;
+      document.body.style.position   = 'fixed';
+      document.body.style.top        = `-${_savedScrollY}px`;
+      document.body.style.left       = '0';
+      document.body.style.right      = '0';
+      document.body.style.overflow   = 'hidden';
+    }
+    _scrollLockCount++;
+  }
+
+  function unlockScroll() {
+    if (_scrollLockCount <= 0) return;
+    _scrollLockCount--;
+    if (_scrollLockCount === 0) {
+      document.body.style.position = '';
+      document.body.style.top      = '';
+      document.body.style.left     = '';
+      document.body.style.right    = '';
+      document.body.style.overflow = '';
+      window.scrollTo({ top: _savedScrollY, behavior: 'instant' });
+    }
+  }
+
   const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
   /* ── 1. NAVBAR: hamburger ── */
@@ -16,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hamburger.classList.toggle('open', isOpen);
     hamburger.setAttribute('aria-expanded', String(isOpen));
     hamburger.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
-    document.body.style.overflow = isOpen ? 'hidden' : '';
+    if (isOpen) lockScroll(); else unlockScroll();
   });
 
   navLinks.querySelectorAll('a').forEach(link => {
@@ -25,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       navLinks.classList.remove('open');
       hamburger.setAttribute('aria-expanded', 'false');
       hamburger.setAttribute('aria-label', 'Open menu');
-      document.body.style.overflow = '';
+      unlockScroll();
     });
   });
 
@@ -106,35 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, { passive: true });
 
-
-  /* ── 4. BEFORE & AFTER SLIDERS (todos os cards do carrossel) ── */
-  function initBaSlider(slider) {
-    const handle = slider.querySelector('.ba-handle');
-    const before = slider.querySelector('.ba-before');
-    if (!handle || !before) return;
-
-    let isDragging = false;
-
-    function setPosition(clientX) {
-      const rect = slider.getBoundingClientRect();
-      const pct  = Math.max(0.05, Math.min(0.95, (clientX - rect.left) / rect.width));
-      const val  = pct * 100 + '%';
-      before.style.width = val;
-      handle.style.left  = val;
-    }
-
-    handle.addEventListener('mousedown', e => { isDragging = true; e.preventDefault(); });
-    window.addEventListener('mousemove', e => { if (isDragging) setPosition(e.clientX); });
-    window.addEventListener('mouseup',   () => { isDragging = false; });
-
-    handle.addEventListener('touchstart', e => { isDragging = true; e.preventDefault(); }, { passive: false });
-    window.addEventListener('touchmove',  e => { if (isDragging) setPosition(e.touches[0].clientX); }, { passive: true });
-    window.addEventListener('touchend',   () => { isDragging = false; });
-
-    slider.addEventListener('click', e => { if (!isDragging) setPosition(e.clientX); });
-  }
-
-  document.querySelectorAll('.ba-carousel .ba-slider').forEach(initBaSlider);
 
   /* ── 4b. RESULTS CAROUSEL ── */
   (function initBaCarousel() {
@@ -241,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function showModal(overlay) {
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    lockScroll();
     const focusable = overlay.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     if (focusable) setTimeout(() => focusable.focus(), 50);
   }
@@ -249,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeModal(overlay) {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+    unlockScroll();
   }
 
   const successOverlay = document.getElementById('modalOverlay');
@@ -315,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lastFocusedTrigger = triggerEl || null;
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    lockScroll();
     const closeBtn = overlay.querySelector('.svc-close');
     if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
   }
@@ -323,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeServiceModal(overlay) {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+    unlockScroll();
     if (lastFocusedTrigger) {
       lastFocusedTrigger.focus();
       lastFocusedTrigger = null;
@@ -511,10 +514,24 @@ document.addEventListener('DOMContentLoaded', () => {
       pct = Math.min(100, Math.max(0, ((x - rect.left) / rect.width) * 100));
       mask.style.width   = pct + '%';
       handle.style.left  = pct + '%';
+      // Keep CSS var in sync so the before-image is always sized to the
+      // full slider width, not just the clipped mask portion.
+      slider.style.setProperty('--slider-pct', (pct / 100).toFixed(4));
     }
+
+    // Seed the CSS custom property so the before-image calc() never
+    // relies on the fallback value during the first interaction frame.
+    slider.style.setProperty('--slider-pct', '0.5');
 
     // Mouse
     slider.addEventListener('mousedown', e => {
+      // Cancel hint animation BEFORE setPos so CSS doesn't fight JS on
+      // the first frame — this is what caused the "jump" on first click.
+      // Explicitly cancel CSS animations too (animation-fill-mode:forwards
+      // would otherwise freeze the last keyframe until next repaint).
+      slider.classList.remove('do-hint');
+      mask.style.animation   = 'none';
+      handle.style.animation = 'none';
       dragging = true;
       slider.classList.add('is-dragging');
       setPos(e.clientX);
@@ -532,6 +549,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Touch
     slider.addEventListener('touchstart', e => {
+      // Same fix for touch: cancel hint animation before computing position.
+      slider.classList.remove('do-hint');
+      mask.style.animation   = 'none';
+      handle.style.animation = 'none';
       dragging = true;
       slider.classList.add('is-dragging');
       setPos(e.touches[0].clientX);
@@ -545,10 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
       slider.classList.remove('is-dragging');
     });
 
-    // Hint animation on first interaction
+    // Hint animation on first open (removed above on first interaction)
     slider.classList.add('do-hint');
-    slider.addEventListener('mousedown',  () => slider.classList.remove('do-hint'), { once: true });
-    slider.addEventListener('touchstart', () => slider.classList.remove('do-hint'), { once: true, passive: true });
   }
 
   // Watch for modals opening and init their sliders
@@ -562,8 +581,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reset position
             const mask   = sl.querySelector('.svc-slider-before-mask');
             const handle = sl.querySelector('.svc-slider-handle');
-            if (mask)   mask.style.width  = '50%';
-            if (handle) handle.style.left = '50%';
+            if (mask)   { mask.style.width  = '50%'; mask.style.animation   = ''; }
+            if (handle) { handle.style.left = '50%'; handle.style.animation = ''; }
+            sl.style.setProperty('--slider-pct', '0.5');
             sl.dataset.sliderReady = '';
             sl.classList.remove('do-hint');
             setupSlider(sl);
