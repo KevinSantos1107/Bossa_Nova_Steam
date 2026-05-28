@@ -924,79 +924,12 @@ a.phone-link:active {
   overflow: hidden;
   text-align: left;
 }
-
-/* Slider inside card */
-.ba-slider {
-  position: relative;
-  height: 420px;
-  cursor: ew-resize;
-  user-select: none;
-  overflow: hidden;
-}
-.ba-after, .ba-before {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-.ba-before { width: 50%; right: auto; z-index: 2; }
-.ba-visual {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  background: #000;
-}
-.ba-visual img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* Inside the carousel card the slider fills edge-to-edge — no inner border or radius */
+.ba-card .svc-slider {
+  border-radius: 0;
+  border: none;
 }
 
-.ba-label {
-  position: absolute;
-  top: 14px;
-  z-index: 5;
-  padding: 4px 12px;
-  border-radius: var(--radius-xl);
-  font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-}
-.ba-label-before { left: 12px; background: #B0413E; color: #fff; }
-.ba-label-after  { right: 12px; background: var(--green-primary); color: #fff; }
-
-.ba-handle {
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 50%;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  transform: translateX(-50%);
-}
-.ba-handle::before {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 50%;
-  width: 2px;
-  background: rgba(255,255,255,.8);
-  transform: translateX(-50%);
-}
-.handle-circle {
-  width: 40px; height: 40px;
-  background: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 12px rgba(0,0,0,.3);
-  z-index: 1;
-  color: #333;
-}
 
 .ba-caption {
   padding: 22px 28px 26px;
@@ -2307,7 +2240,6 @@ a.phone-link:active {
 
   /* Carousel mobile */
   .ba-carousel { max-width: 100%; }
-  .ba-slider { height: 280px; }
   .ba-nav { width: 40px; height: 40px; top: 140px; }
   .ba-nav-prev { left: 8px; }
   .ba-nav-next { right: 8px; }
@@ -2694,10 +2626,16 @@ html.theme-switching *:not(.marquee-track)::after {
 .svc-slider-before-mask img {
   position: absolute;
   top: 0; left: 0;
-  width: 100vw; /* keeps image at full slider width regardless of clip */
+  /* The mask clips, but the image must stay full-slider-wide so it lines
+     up pixel-for-pixel with the after image. JS keeps mask-width in the
+     custom property --slider-pct (0–1); we invert it here so the image
+     always covers the full slider regardless of clip amount.
+     Fallback (50% mask) → 100% / 0.5 = 200% of mask = 100% of slider. */
+  width: calc(100% / var(--slider-pct, 0.5));
   max-width: none;
   height: 100%;
   object-fit: cover;
+  object-position: left center;
   pointer-events: none;
   display: block;
 }
