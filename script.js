@@ -56,11 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  /* -- 3. UNIFIED SCROLL HANDLER (rAF-throttled) --
-     Centralizes navbar scrolled state, sticky CTA, parallax, and active nav
-     in one requestAnimationFrame listener.
-     Multiple separate listeners were competing for frames and causing
-     mobile paint issues where the hero title disappeared. */
+  /* ── 3. UNIFIED SCROLL HANDLER (rAF-throttled) ──
+     Centraliza navbar scrolled, sticky CTA, parallax e active nav
+     em UM único listener com requestAnimationFrame.
+     Antes eram 4 listeners separados disputando frames — causava
+     bug de pintura no mobile (título do hero sumindo). */
   const stickyCta  = document.getElementById('stickyCta');
   const heroEl     = document.getElementById('hero');
   const heroGlow1  = document.querySelector('.glow-1');
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroHeight = heroEl ? heroEl.offsetHeight : 400;
     stickyCta.classList.toggle('visible', y > heroHeight * 0.6);
 
-    // Hero parallax: desktop only. Mobile causes paint issues with 120px blurred glows.
+    // Hero parallax — DESKTOP ONLY (mobile causa bug de paint nos glows com blur 120px)
     if (!isMobile && y < window.innerHeight) {
       if (heroGlow1) heroGlow1.style.transform = `translate3d(0, ${y * 0.2}px, 0)`;
       if (heroGlow2) heroGlow2.style.transform = `translate3d(0, ${y * -0.15}px, 0)`;
@@ -107,7 +107,36 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 
 
-  /* -- 4. RESULTS CAROUSEL -- */
+  /* ── 4. BEFORE & AFTER SLIDERS (todos os cards do carrossel) ── */
+  function initBaSlider(slider) {
+    const handle = slider.querySelector('.ba-handle');
+    const before = slider.querySelector('.ba-before');
+    if (!handle || !before) return;
+
+    let isDragging = false;
+
+    function setPosition(clientX) {
+      const rect = slider.getBoundingClientRect();
+      const pct  = Math.max(0.05, Math.min(0.95, (clientX - rect.left) / rect.width));
+      const val  = pct * 100 + '%';
+      before.style.width = val;
+      handle.style.left  = val;
+    }
+
+    handle.addEventListener('mousedown', e => { isDragging = true; e.preventDefault(); });
+    window.addEventListener('mousemove', e => { if (isDragging) setPosition(e.clientX); });
+    window.addEventListener('mouseup',   () => { isDragging = false; });
+
+    handle.addEventListener('touchstart', e => { isDragging = true; e.preventDefault(); }, { passive: false });
+    window.addEventListener('touchmove',  e => { if (isDragging) setPosition(e.touches[0].clientX); }, { passive: true });
+    window.addEventListener('touchend',   () => { isDragging = false; });
+
+    slider.addEventListener('click', e => { if (!isDragging) setPosition(e.clientX); });
+  }
+
+  document.querySelectorAll('.ba-carousel .ba-slider').forEach(initBaSlider);
+
+  /* ── 4b. RESULTS CAROUSEL ── */
   (function initBaCarousel() {
     const carousel = document.getElementById('baCarousel');
     if (!carousel) return;
@@ -194,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener('submit', e => {
     e.preventDefault();
-    // Run all validations, without short-circuiting, then combine the result.
+    // Roda TODAS as validações (sem short-circuit) e depois combina
     const okName    = validateName();
     const okPhone   = validatePhone();
     const okService = validateService();
@@ -209,49 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* ── 6. MODAL HELPERS ── */
-  let scrollLockY = 0;
-  let scrollLockCount = 0;
-  let scrollLockPaddingRight = '';
-
-  function lockBodyScroll() {
-    if (scrollLockCount === 0) {
-      scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      scrollLockPaddingRight = document.body.style.paddingRight;
-      document.documentElement.classList.add('scroll-locked');
-      document.body.classList.add('scroll-locked');
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollLockY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-      if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-    scrollLockCount += 1;
-  }
-
-  function unlockBodyScroll() {
-    if (scrollLockCount === 0) return;
-    scrollLockCount -= 1;
-    if (scrollLockCount > 0) return;
-
-    document.documentElement.classList.remove('scroll-locked');
-    document.body.classList.remove('scroll-locked');
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.left = '';
-    document.body.style.right = '';
-    document.body.style.width = '';
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = scrollLockPaddingRight;
-    window.scrollTo(0, scrollLockY);
-  }
-
   function showModal(overlay) {
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
-    lockBodyScroll();
+    document.body.style.overflow = 'hidden';
     const focusable = overlay.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     if (focusable) setTimeout(() => focusable.focus(), 50);
   }
@@ -259,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeModal(overlay) {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
-    unlockBodyScroll();
+    document.body.style.overflow = '';
   }
 
   const successOverlay = document.getElementById('modalOverlay');
@@ -271,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  /* -- 7. SMOOTH SCROLL for anchor links -- */
+  /* ── 7. SMOOTH SCROLL para anchor links ── */
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
       const target = document.querySelector(this.getAttribute('href'));
@@ -325,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lastFocusedTrigger = triggerEl || null;
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
-    lockBodyScroll();
+    document.body.style.overflow = 'hidden';
     const closeBtn = overlay.querySelector('.svc-close');
     if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
   }
@@ -333,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeServiceModal(overlay) {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
-    unlockBodyScroll();
+    document.body.style.overflow = '';
     if (lastFocusedTrigger) {
       lastFocusedTrigger.focus();
       lastFocusedTrigger = null;
@@ -344,9 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => openServiceModal(btn.dataset.service, btn));
   });
 
-  /* Marquee items: clicking opens the service modal directly.
-     Before opening, scroll to #services so that after closing the modal,
-     the user remains in the services section. */
+  /* Marquee items: clicar abre o modal do serviço diretamente.
+     Antes de abrir, leva o scroll até a seção #services para que,
+     ao fechar o modal (X), o usuário permaneça na seção de serviços. */
   document.querySelectorAll('.marquee-item[data-svc]').forEach(item => {
     item.addEventListener('click', e => {
       const key = item.dataset.svc;
@@ -357,8 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const top = services.getBoundingClientRect().top + window.scrollY - 72;
         window.scrollTo({ top, behavior: 'smooth' });
       }
-      // Use the services section itself as the trigger so focus returns there
-      // instead of jumping back to the marquee item above.
+      // Usa a própria seção de serviços como "trigger" — ao fechar, o foco
+      // volta para lá em vez de voltar para o item da marquee (que está acima).
       openServiceModal(key, services || item);
     });
   });
@@ -388,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ESC closes modals.
+  // ESC fecha modais
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (successOverlay.classList.contains('open')) {
@@ -400,10 +390,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  /* -- 11. THEME TOGGLE --
-     To avoid flicker during theme switching, disable all transitions
-     for one frame, switch the theme instantly, then re-enable them.
-     This keeps body, card, text, and border colors changing together. */
+  /* ── 11. THEME TOGGLE ──
+     Para evitar o "piscar" durante a troca: desligamos TODAS as transições
+     por um frame, trocamos o tema instantaneamente, e religamos depois.
+     Assim cores de body, cards, textos e bordas mudam ao mesmo tempo. */
   (function initThemeToggle() {
     const btn = document.getElementById('themeToggle');
     if (!btn) return;
@@ -412,8 +402,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function apply(theme, instant) {
       if (instant) {
         root.classList.add('theme-switching');
-        // Force reflow so the browser applies no-transition
-        // before changing CSS variables.
+        // força reflow para garantir que o navegador "veja" o no-transition
+        // antes de mudar as variáveis CSS
         void root.offsetHeight;
       }
       root.setAttribute('data-theme', theme);
@@ -421,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
       try { localStorage.setItem('bn-theme', theme); } catch (e) {}
       if (instant) {
-        // Remove on the next frame after the new colors have painted.
+        // Remove no próximo frame, depois que as novas cores foram pintadas
         requestAnimationFrame(() => {
           requestAnimationFrame(() => root.classList.remove('theme-switching'));
         });
@@ -433,37 +423,38 @@ document.addEventListener('DOMContentLoaded', () => {
       apply(current === 'dark' ? 'light' : 'dark', true);
     });
 
-    // Initial setup: no flicker, no transition.
+    // Set inicial — sem flicker, sem transição
     apply(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light', false);
   })();
 
-  /* -- 12. MARQUEE SWIPE (interactive touch, left only) --
-   Uses negative animation-delay to sync the animation position
-   with the finger position without transform-vs-animation conflicts. */
+  /* ── 12. MARQUEE SWIPE (toque interativo, só para esquerda) ──
+   Usa o truque de animation-delay negativo para sincronizar a
+   posição da animação com a posição do dedo sem conflito de
+   transform vs animação. */
 (function initMarqueeSwipe() {
   const track = document.querySelector('.marquee-track');
   if (!track) return;
 
   let dragging  = false;
   let startX    = 0;
-  let startProg = 0; // progress at touch start (0 to 1)
+  let startProg = 0; // progresso no momento do toque (0 a 1)
 
-  /* Return the current animated duration in seconds. */
+  /* Retorna a duração animada atual em segundos */
   function getDuration() {
     return window.innerWidth <= 768 ? 28 : 38;
   }
 
-  /* Read the current visual animation position as a fraction (0-1). */
+  /* Lê a posição visual atual da animação como fração (0–1) */
   function getCurrentProgress() {
     const matrix = new DOMMatrix(window.getComputedStyle(track).transform);
-    const px     = matrix.m41; // translateX in px, negative value
-    const total  = track.scrollWidth / 2; // distance of one complete loop
+    const px     = matrix.m41; // translateX em px (valor negativo)
+    const total  = track.scrollWidth / 2; // distância de um loop completo
     return Math.abs(px) / total;
   }
 
-  /* Apply progress (0-1) through negative animation-delay. */
+  /* Aplica um progresso (0–1) via animation-delay negativo */
   function setProgress(p) {
-    p = ((p % 1) + 1) % 1; // keep within [0, 1)
+    p = ((p % 1) + 1) % 1; // mantém no intervalo [0, 1)
     track.style.animationDelay = `${-(p * getDuration())}s`;
   }
 
@@ -472,13 +463,13 @@ document.addEventListener('DOMContentLoaded', () => {
     startX     = e.touches[0].clientX;
     startProg  = getCurrentProgress();
     track.style.animationPlayState = 'paused';
-    setProgress(startProg); // freeze exactly on the current frame
+    setProgress(startProg); // congela exatamente no frame atual
   }, { passive: true });
 
   track.addEventListener('touchmove', (e) => {
     if (!dragging) return;
     const dx = e.touches[0].clientX - startX;
-    if (dx > 0) return; // block rightward movement
+    if (dx > 0) return; // bloqueia movimento para direita
 
     const total    = track.scrollWidth / 2;
     const deltaPct = Math.abs(dx) / total;
@@ -488,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
   track.addEventListener('touchend', () => {
     if (!dragging) return;
     dragging = false;
-    track.style.animationPlayState = 'running'; // resume from the current point
+    track.style.animationPlayState = 'running'; // retoma do ponto atual
   });
 })();
 
@@ -506,74 +497,53 @@ document.addEventListener('DOMContentLoaded', () => {
    Initialised when a modal opens, reset on close
 ══════════════════════════════════════════ */
 (function initSvcSliders() {
-  function setSliderDragLock(active) {
-    document.documentElement.classList.toggle('slider-dragging', active);
-    document.body.classList.toggle('slider-dragging', active);
-  }
-
   function setupSlider(slider) {
     if (slider.dataset.sliderReady) return;
     slider.dataset.sliderReady = '1';
 
     const mask   = slider.querySelector('.svc-slider-before-mask');
     const handle = slider.querySelector('.svc-slider-handle');
-    if (!mask || !handle) return;
-
+    let pct = 50;
     let dragging = false;
-    let dragRect = null;
 
-    function applyPos(x) {
-      const rect = dragRect || slider.getBoundingClientRect();
-      const pct = Math.min(100, Math.max(0, ((x - rect.left) / rect.width) * 100));
-      const val = pct + '%';
-      mask.style.width = val;
-      handle.style.left = val;
-    }
-
-    function startDrag(x) {
-      dragging = true;
-      dragRect = slider.getBoundingClientRect();
-      slider.classList.add('is-dragging');
-      setSliderDragLock(true);
-      applyPos(x);
-    }
-
-    function moveDrag(x) {
-      if (!dragging) return;
-      applyPos(x);
-    }
-
-    function endDrag() {
-      if (!dragging) return;
-      dragging = false;
-      dragRect = null;
-      slider.classList.remove('is-dragging');
-      setSliderDragLock(false);
+    function setPos(x) {
+      const rect = slider.getBoundingClientRect();
+      pct = Math.min(100, Math.max(0, ((x - rect.left) / rect.width) * 100));
+      mask.style.width   = pct + '%';
+      handle.style.left  = pct + '%';
     }
 
     // Mouse
     slider.addEventListener('mousedown', e => {
-      startDrag(e.clientX);
+      dragging = true;
+      slider.classList.add('is-dragging');
+      setPos(e.clientX);
       e.preventDefault();
     });
     window.addEventListener('mousemove', e => {
-      moveDrag(e.clientX);
+      if (!dragging) return;
+      setPos(e.clientX);
     });
-    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      slider.classList.remove('is-dragging');
+    });
 
     // Touch
     slider.addEventListener('touchstart', e => {
-      if (!e.touches.length) return;
-      e.preventDefault();
-      startDrag(e.touches[0].clientX);
-    }, { passive: false });
-    window.addEventListener('touchmove', e => {
+      dragging = true;
+      slider.classList.add('is-dragging');
+      setPos(e.touches[0].clientX);
+    }, { passive: true });
+    slider.addEventListener('touchmove', e => {
       if (!dragging) return;
-      e.preventDefault();
-      if (e.touches.length) moveDrag(e.touches[0].clientX);
-    }, { passive: false });
-    window.addEventListener('touchend', endDrag);
-    window.addEventListener('touchcancel', endDrag);
+      setPos(e.touches[0].clientX);
+    }, { passive: true });
+    slider.addEventListener('touchend', () => {
+      dragging = false;
+      slider.classList.remove('is-dragging');
+    });
 
     // Hint animation on first interaction
     slider.classList.add('do-hint');
@@ -594,7 +564,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const handle = sl.querySelector('.svc-slider-handle');
             if (mask)   mask.style.width  = '50%';
             if (handle) handle.style.left = '50%';
-            sl.classList.add('do-hint');
+            sl.dataset.sliderReady = '';
+            sl.classList.remove('do-hint');
             setupSlider(sl);
           });
         }
