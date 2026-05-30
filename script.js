@@ -309,6 +309,38 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.stat-value').forEach(el => statObserver.observe(el));
 
 
+  /* ── 8c. REVIEW RELATIVE DATES ──
+     Cada <span data-review-date="YYYY-MM-DD"> tem a data real do review.
+     Este bloco calcula automaticamente "X dias/semanas/meses/anos atrás"
+     toda vez que a página carrega, mantendo o texto sempre atualizado.
+     Para atualizar um review: basta trocar o valor do atributo data-review-date.
+     ─────────────────────────────────────────────────────── */
+  (function updateReviewDates() {
+    function timeAgo(dateStr) {
+      const reviewDate = new Date(dateStr + 'T00:00:00');
+      const now        = new Date();
+      const diffMs     = now - reviewDate;
+      const diffDays   = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 1)  return 'today';
+      if (diffDays === 1) return '1 day ago';
+      if (diffDays < 7)  return `${diffDays} days ago`;
+      if (diffDays < 14) return '1 week ago';
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+      if (diffDays < 60) return '1 month ago';
+      if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+      if (diffDays < 730) return '1 year ago';
+      return `${Math.floor(diffDays / 365)} years ago`;
+    }
+
+    document.querySelectorAll('[data-review-date]').forEach(el => {
+      const date     = el.getAttribute('data-review-date');
+      const location = el.textContent.split('·')[1]?.trim() || 'Austin, TX';
+      el.textContent = `${timeAgo(date)} · ${location}`;
+    });
+  })();
+
+
   /* ── 9. SERVICE DETAIL MODALS ── */
   let lastFocusedTrigger = null;
 
