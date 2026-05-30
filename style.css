@@ -1012,9 +1012,6 @@ a.phone-link:active {
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   box-shadow: var(--shadow-soft);
-  left: 50%;
-  position: relative;
-  transform: translateX(-50%);
   max-width: calc(100% - 24px);
   flex-wrap: wrap;
   justify-content: center;
