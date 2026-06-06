@@ -669,22 +669,62 @@ document.addEventListener('DOMContentLoaded', () => {
       slider.classList.remove('is-dragging');
     });
 
-    // Touch
+    // Touch — detecta direção antes de agir para não conflitar com scroll vertical
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let intentDetermined = false; // true após medir a direção no primeiro touchmove
+    let isHorizontal = false;     // true = gesto horizontal → slider age
+
     slider.addEventListener('touchstart', e => {
-      // Same fix for touch: cancel hint animation before computing position.
-      slider.classList.remove('do-hint');
-      mask.style.animation   = 'none';
-      handle.style.animation = 'none';
-      dragging = true;
-      slider.classList.add('is-dragging');
-      setPos(e.touches[0].clientX);
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      intentDetermined = false;
+      isHorizontal = false;
+      dragging = false;
     }, { passive: true });
+
     slider.addEventListener('touchmove', e => {
-      if (!dragging) return;
-      setPos(e.touches[0].clientX);
-    }, { passive: true });
+      const touch = e.touches[0];
+
+      // Primeira passagem: mede a direção predominante do gesto
+      if (!intentDetermined) {
+        const dx = Math.abs(touch.clientX - touchStartX);
+        const dy = Math.abs(touch.clientY - touchStartY);
+
+        // Exige deslocamento mínimo de 5px para filtrar micro-toques
+        if (dx < 5 && dy < 5) return;
+
+        intentDetermined = true;
+        isHorizontal = dx > dy; // horizontal se o eixo X domina
+
+        if (isHorizontal) {
+          // Gesto horizontal confirmado — inicia o slider agora
+          slider.classList.remove('do-hint');
+          mask.style.animation   = 'none';
+          handle.style.animation = 'none';
+          dragging = true;
+          slider.classList.add('is-dragging');
+          setPos(touchStartX); // posição inicial do toque
+        }
+      }
+
+      if (!isHorizontal) return; // gesto vertical → deixa o scroll agir
+
+      e.preventDefault(); // bloqueia o scroll enquanto arrasta o slider
+      setPos(touch.clientX);
+    }, { passive: false }); // passive: false permite chamar preventDefault()
+
     slider.addEventListener('touchend', () => {
       dragging = false;
+      intentDetermined = false;
+      isHorizontal = false;
+      slider.classList.remove('is-dragging');
+    });
+
+    slider.addEventListener('touchcancel', () => {
+      dragging = false;
+      intentDetermined = false;
+      isHorizontal = false;
       slider.classList.remove('is-dragging');
     });
 
