@@ -230,13 +230,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const okName    = validateName();
     const okPhone   = validatePhone();
     const okService = validateService();
-    if (okName && okPhone && okService) {
-      showModal(document.getElementById('modalOverlay'));
-      form.reset();
-    } else {
+    if (!(okName && okPhone && okService)) {
       const firstError = form.querySelector('.error');
       if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
     }
+
+    // ── EMAILJS: enviar os dados do formulário ──
+    const submitBtn = form.querySelector('[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    const serviceMap = {
+      carpet: 'Carpet Cleaning',
+      upholstery: 'Upholstery Cleaning',
+      stain: 'Stain & Odor Removal',
+      steam: 'Steam Cleaning',
+      residential: 'Residential Deep Clean',
+      other: 'Other / Not Sure'
+    };
+
+    const templateParams = {
+      from_name:    nameInput.value.trim(),
+      phone:        phoneInput.value.trim(),
+      service:      serviceMap[serviceInput.value] || serviceInput.value,
+      message:      document.getElementById('message').value.trim() || '(no additional info)',
+      reply_to:     'info@bossanovahomeservices.com',
+    };
+
+    // ─────────────────────────────────────────────────────────────────
+    // SUBSTITUA OS VALORES ABAIXO PELAS SUAS CREDENCIAIS DO EMAILJS:
+    //   SERVICE_ID  → Dashboard → Email Services → seu serviço
+    //   TEMPLATE_ID → Email Templates → seu template
+    //   PUBLIC_KEY  → Account → API Keys → Public Key
+    // ─────────────────────────────────────────────────────────────────
+    const EMAILJS_SERVICE_ID  = 'service_fsqdk9v';
+    const EMAILJS_TEMPLATE_ID = 'template_up60b6k';
+    const EMAILJS_PUBLIC_KEY  = 'egrTyJ98qhSWd19H2';
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY)
+      .then(() => {
+        showModal(document.getElementById('modalOverlay'));
+        form.reset();
+      })
+      .catch((err) => {
+        console.error('EmailJS error:', err);
+        alert('Sorry, something went wrong. Please call us directly at (512) 744-8377.');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      });
   });
 
 
